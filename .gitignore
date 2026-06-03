@@ -60,3 +60,9 @@ htmlcov/
 # ── Misc ─────────────────────────────────────────────────────────────────────
 *.linka
 tmp/
+
+# ── Internal docs (не для репо) ──────────────────────────────────────────────
+docs/architecture-decisions.md
+config/*.yml
+!config/config.dev.yml
+bin/

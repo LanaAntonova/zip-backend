@@ -1,0 +1,29 @@
+app:
+  env: dev
+  port: "8080"
+
+db:
+  url: "postgres://linka:linka@localhost:5432/linka?sslmode=disable"
+
+redis:
+  url: "redis://localhost:6379/0"
+
+nats:
+  url: "nats://localhost:4222"
+
+minio:
+  endpoint: "localhost:9000"
+  access_key: "minioadmin"
+  secret_key: "minioadmin"
+  bucket: "linka-media"
+  use_ssl: false
+
+jwt:
+  secret: "changeme-min-32-chars-secret-key"
+  access_ttl: "15m"
+  refresh_ttl: "720h"
+
+google:
+  client_id: ""
+  client_secret: ""
+  redirect_url: "http://localhost:8080/auth/google/callback"
