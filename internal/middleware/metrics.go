@@ -33,7 +33,7 @@ func Metrics(next http.Handler) http.Handler {
 
 		path := r.Pattern
 		if path == "" {
-			path = r.URL.Path
+			path = "unknown"
 		}
 
 		metrics.IncRequests(r.Method, path, statusStr)

@@ -61,25 +61,17 @@ func NewHandler() http.Handler {
 }
 
 func IncRequests(method, path, status string) {
-	if httpRequestsTotal != nil {
-		httpRequestsTotal.WithLabelValues(method, path, status).Inc()
-	}
+	httpRequestsTotal.WithLabelValues(method, path, status).Inc()
 }
 
 func ObserveDuration(method, path, status string, seconds float64) {
-	if httpRequestDuration != nil {
-		httpRequestDuration.WithLabelValues(method, path, status).Observe(seconds)
-	}
+	httpRequestDuration.WithLabelValues(method, path, status).Observe(seconds)
 }
 
 func IncInFlight() {
-	if httpRequestsInFlight != nil {
-		httpRequestsInFlight.Inc()
-	}
+	httpRequestsInFlight.Inc()
 }
 
 func DecInFlight() {
-	if httpRequestsInFlight != nil {
-		httpRequestsInFlight.Dec()
-	}
+	httpRequestsInFlight.Dec()
 }
