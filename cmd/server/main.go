@@ -12,6 +12,8 @@ import (
 	"time"
 
 	"github.com/Linka-masterskaya/zip-backend/internal/config"
+	"github.com/Linka-masterskaya/zip-backend/internal/metrics"
+	"github.com/Linka-masterskaya/zip-backend/internal/middleware"
 )
 
 var (
@@ -33,8 +35,23 @@ func main() {
 
 	slog.SetDefault(newLogger(cfg.App.Env))
 
-	mux := http.NewServeMux()
-	mux.HandleFunc("GET /health", func(w http.ResponseWriter, _ *http.Request) {
+	metrics.Initialize()
+
+	mainMux := http.NewServeMux()
+	wrappedHandler := middleware.Metrics(mainMux)
+
+	srv := &http.Server{
+		Addr:         ":" + cfg.App.Port,
+		Handler:      wrappedHandler,
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 30 * time.Second,
+		IdleTimeout:  60 * time.Second,
+	}
+
+	metricsMux := http.NewServeMux()
+	metricsMux.Handle("GET /metrics", metrics.NewHandler())
+
+	metricsMux.HandleFunc("GET /health", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		if err := json.NewEncoder(w).Encode(map[string]string{
 			"status": "ok",
@@ -44,12 +61,11 @@ func main() {
 		}
 	})
 
-	srv := &http.Server{
-		Addr:         ":" + cfg.App.Port,
-		Handler:      mux,
-		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 30 * time.Second,
-		IdleTimeout:  60 * time.Second,
+	metricsSrv := &http.Server{
+		Addr:         ":9090",
+		Handler:      metricsMux,
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 5 * time.Second,
 	}
 
 	slog.Info("starting server",
@@ -61,8 +77,15 @@ func main() {
 
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			slog.Error("server error", "err", err)
+			slog.Error("main server error", "err", err)
 			os.Exit(1)
+		}
+	}()
+
+	go func() {
+		slog.Info("starting metrics and health server", "addr", metricsSrv.Addr)
+		if err := metricsSrv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			slog.Error("metrics server error", "err", err)
 		}
 	}()
 
@@ -73,6 +96,12 @@ func main() {
 	slog.Info("shutting down...")
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
+
+	go func() {
+		if err := metricsSrv.Shutdown(ctx); err != nil {
+			slog.Error("metrics server shutdown error", "err", err)
+		}
+	}()
 
 	if err := srv.Shutdown(ctx); err != nil {
 		slog.Error("shutdown error", "err", err)
