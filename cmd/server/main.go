@@ -1,3 +1,4 @@
+// Command server runs the HTTP API server.
 package main
 
 import (
@@ -13,6 +14,11 @@ import (
 	"github.com/Linka-masterskaya/zip-backend/internal/config"
 	"github.com/Linka-masterskaya/zip-backend/internal/metrics"
 	"github.com/Linka-masterskaya/zip-backend/internal/middleware"
+)
+
+var (
+	version   string
+	buildTime string
 )
 
 func main() {
@@ -44,12 +50,15 @@ func main() {
 
 	metricsMux := http.NewServeMux()
 	metricsMux.Handle("GET /metrics", metrics.NewHandler())
-	metricsMux.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) {
+
+	metricsMux.HandleFunc("GET /health", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode(map[string]string{
+		if err := json.NewEncoder(w).Encode(map[string]string{
 			"status": "ok",
 			"env":    cfg.App.Env,
-		})
+		}); err != nil {
+			slog.Error("health response encode failed", "err", err)
+		}
 	})
 
 	metricsSrv := &http.Server{
@@ -59,8 +68,14 @@ func main() {
 		WriteTimeout: 5 * time.Second,
 	}
 
+	slog.Info("starting server",
+		"addr", srv.Addr,
+		"env", cfg.App.Env,
+		"version", version,
+		"buildTime", buildTime,
+	)
+
 	go func() {
-		slog.Info("starting main server", "addr", srv.Addr, "env", cfg.App.Env)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			slog.Error("main server error", "err", err)
 			os.Exit(1)
