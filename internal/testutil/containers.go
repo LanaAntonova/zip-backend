@@ -21,7 +21,7 @@ func NewPostgres(t *testing.T) (*pgxpool.Pool, func()) {
 	ctx := context.Background()
 	pgContainer, err := postgres.Run(ctx,
 		"postgres:16-alpine",
-		postgres.WithDatabase("test-db"),
+		postgres.WithDatabase("postgres"),
 		postgres.WithUsername("postgres"),
 		postgres.WithPassword("postgres"),
 		// Wait until PostgreSQL reports readiness in logs.
