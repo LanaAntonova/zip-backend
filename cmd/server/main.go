@@ -15,12 +15,20 @@ import (
 	"syscall"
 	"time"
 
-	broker "github.com/Linka-masterskaya/zip-backend/internal/broker"
+	"github.com/nats-io/nats.go"
+	"github.com/nats-io/nats.go/jetstream"
+
+	"github.com/Linka-masterskaya/zip-backend/internal/broker"
 	"github.com/Linka-masterskaya/zip-backend/internal/cache"
 	"github.com/Linka-masterskaya/zip-backend/internal/config"
 	"github.com/Linka-masterskaya/zip-backend/internal/db"
 	"github.com/Linka-masterskaya/zip-backend/internal/metrics"
 	"github.com/Linka-masterskaya/zip-backend/internal/middleware"
+	"github.com/Linka-masterskaya/zip-backend/internal/redis"
+	"github.com/Linka-masterskaya/zip-backend/migrations"
+	_ "github.com/lib/pq"
+	"github.com/nats-io/nats.go"
+	"github.com/nats-io/nats.go/jetstream"
 	"github.com/Linka-masterskaya/zip-backend/internal/storage"
 	"github.com/Linka-masterskaya/zip-backend/migrations"
 
@@ -98,7 +106,10 @@ func main() {
 		log.Println("Migrations completed. Exiting.")
 		return
 	}
+<<<<<<< HEAD
 
+=======
+>>>>>>> 767fdc2943e4c2f85e40c2ee53e57d02e2b8b74f
 	// Postgres. Инициализация
 	dbPool, err := db.New(cfg.DB)
 	if err != nil {

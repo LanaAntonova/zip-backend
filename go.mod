@@ -3,8 +3,8 @@ module github.com/Linka-masterskaya/zip-backend
 go 1.25.7
 
 require (
-	github.com/jackc/pgx/v5 v5.10.0
 	github.com/lib/pq v1.12.3
+	github.com/jackc/pgx/v5 v5.10.0
 	github.com/minio/minio-go/v7 v7.2.0
 	github.com/nats-io/nats-server/v2 v2.14.2
 	github.com/nats-io/nats.go v1.52.0
@@ -13,6 +13,7 @@ require (
 	github.com/redis/go-redis/v9 v9.20.1
 	github.com/spf13/viper v1.21.0
 	github.com/stretchr/testify v1.11.1
+	golang.org/x/sync v0.20.0
 	github.com/testcontainers/testcontainers-go v0.42.0
 	github.com/testcontainers/testcontainers-go/modules/postgres v0.42.0
 	github.com/testcontainers/testcontainers-go/modules/redis v0.42.0
@@ -51,6 +52,7 @@ require (
 	github.com/klauspost/compress v1.18.6 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.11 // indirect
 	github.com/klauspost/crc32 v1.3.0 // indirect
+	github.com/mfridman/interpolate v0.0.2 // indirect
 	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect
 	github.com/magiconair/properties v1.8.10 // indirect
 	github.com/mdelapenya/tlscert v0.2.0 // indirect
