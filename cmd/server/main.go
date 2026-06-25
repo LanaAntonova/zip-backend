@@ -219,7 +219,7 @@ func readyzHandler(redisClient *cache.Client) http.HandlerFunc {
 	}
 }
 
-// runMigrationsIfNeeded проверяет флаг --migrate и выполняет миграции, если он установлен
+// runMigrationsIfNeeded проверяет флаг --migrate и выполняет миграции, если он установлен.
 func runMigrationsIfNeeded(cfg *config.Config) {
 	migrateFlag := flag.Bool("migrate", false, "Run database migrations and exit")
 	flag.Parse()
