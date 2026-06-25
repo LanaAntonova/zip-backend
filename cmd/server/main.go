@@ -15,6 +15,7 @@ import (
 	"syscall"
 	"time"
 
+	_ "github.com/lib/pq"
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 
@@ -24,17 +25,8 @@ import (
 	"github.com/Linka-masterskaya/zip-backend/internal/db"
 	"github.com/Linka-masterskaya/zip-backend/internal/metrics"
 	"github.com/Linka-masterskaya/zip-backend/internal/middleware"
-	"github.com/Linka-masterskaya/zip-backend/internal/redis"
-	"github.com/Linka-masterskaya/zip-backend/migrations"
-	_ "github.com/lib/pq"
-	"github.com/nats-io/nats.go"
-	"github.com/nats-io/nats.go/jetstream"
 	"github.com/Linka-masterskaya/zip-backend/internal/storage"
 	"github.com/Linka-masterskaya/zip-backend/migrations"
-
-	_ "github.com/lib/pq"
-	"github.com/nats-io/nats.go"
-	"github.com/nats-io/nats.go/jetstream"
 )
 
 var (
@@ -52,6 +44,26 @@ func main() {
 	if err != nil {
 		slog.Error("config load failed", "err", err)
 		os.Exit(1)
+	}
+
+	// Обработка флага --migrate (перенесено в самое начало)
+	migrateFlag := flag.Bool("migrate", false, "Run database migrations and exit")
+	flag.Parse()
+
+	if *migrateFlag {
+		// Migrate. Загрузка конфига, подключение к БД
+		dbConn, err := sql.Open("postgres", cfg.DB.URL)
+		if err != nil {
+			slog.Error("failed to connect to postgres for migration", "err", err)
+			os.Exit(1)
+		}
+		defer dbConn.Close()
+
+		if err := migrations.Run(dbConn); err != nil {
+			log.Fatalf("Migration failed: %v", err)
+		}
+		log.Println("Migrations completed. Exiting.")
+		return
 	}
 
 	slog.SetDefault(newLogger(cfg.App.Env))
@@ -84,32 +96,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Migrate. Загрузка конфига, подключение к БД
-	// Обработка флага --migrate
-	migrateFlag := flag.Bool("migrate", false, "Run database migrations and exit")
-	flag.Parse()
-
-	// Если флаг --migrate, выполняем миграции
-	if *migrateFlag {
-		// Подключение к БД
-		db, err := sql.Open("postgres", cfg.DB.URL)
-		if err != nil {
-			slog.Error("failed to connect to postgres", "err", err)
-			os.Exit(1)
-		}
-		defer db.Close()
-
-		// Запуск миграций
-		if err := migrations.Run(db); err != nil {
-			log.Fatalf("Migration failed: %v", err)
-		}
-		log.Println("Migrations completed. Exiting.")
-		return
-	}
-<<<<<<< HEAD
-
-=======
->>>>>>> 767fdc2943e4c2f85e40c2ee53e57d02e2b8b74f
 	// Postgres. Инициализация
 	dbPool, err := db.New(cfg.DB)
 	if err != nil {
@@ -188,7 +174,6 @@ func main() {
 	if err := redisClient.Close(); err != nil {
 		slog.Error("redis close error", "err", err)
 	}
-
 }
 
 func newLogger(env string) *slog.Logger {
