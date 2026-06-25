@@ -46,25 +46,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Обработка флага --migrate (перенесено в самое начало)
-	migrateFlag := flag.Bool("migrate", false, "Run database migrations and exit")
-	flag.Parse()
-
-	if *migrateFlag {
-		// Migrate. Загрузка конфига, подключение к БД
-		dbConn, err := sql.Open("postgres", cfg.DB.URL)
-		if err != nil {
-			slog.Error("failed to connect to postgres for migration", "err", err)
-			os.Exit(1)
-		}
-		defer dbConn.Close()
-
-		if err := migrations.Run(dbConn); err != nil {
-			log.Fatalf("Migration failed: %v", err)
-		}
-		log.Println("Migrations completed. Exiting.")
-		return
-	}
+	// Обработка флага --migrate
+	runMigrationsIfNeeded(cfg)
 
 	slog.SetDefault(newLogger(cfg.App.Env))
 
@@ -234,4 +217,32 @@ func readyzHandler(redisClient *cache.Client) http.HandlerFunc {
 			slog.Error("readyz response encode failed", "err", err)
 		}
 	}
+}
+
+// runMigrationsIfNeeded проверяет флаг --migrate и выполняет миграции, если он установлен
+func runMigrationsIfNeeded(cfg *config.Config) {
+	migrateFlag := flag.Bool("migrate", false, "Run database migrations and exit")
+	flag.Parse()
+
+	if !*migrateFlag {
+		return
+	}
+
+	// Подключаемся к БД только для миграций
+	dbConn, err := sql.Open("postgres", cfg.DB.URL)
+	if err != nil {
+		slog.Error("failed to connect to postgres for migration", "err", err)
+		os.Exit(1)
+	}
+	defer func() {
+		if err := dbConn.Close(); err != nil {
+			slog.Error("failed to close db connection after migration", "err", err)
+		}
+	}()
+
+	if err := migrations.Run(dbConn); err != nil {
+		log.Fatalf("Migration failed: %v", err)
+	}
+	log.Println("Migrations completed. Exiting.")
+	os.Exit(0)
 }
